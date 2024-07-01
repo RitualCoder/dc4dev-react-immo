@@ -1,45 +1,65 @@
-import { useEffect, useState } from "react"
-import AdvertList from "./components/AdvertList"
-import AdvertPaginate from "./components/AdvertPaginate"
-import AdvertService  from "./services/advert.service"
-import { Link } from "react-router-dom"
+import { useEffect, useState } from "react";
+import AdvertList from "./components/AdvertList";
+import AdvertPaginate from "./components/AdvertPaginate";
+import AdvertService from "./services/advert.service";
+import { Link } from "react-router-dom";
 
-function Advert(){    
-    const [totalCount, setTotalCount] = useState(0)
-    const [advertList, setAdvertList] = useState([])
+function Advert() {
+  const [totalCount, setTotalCount] = useState(0);
+  const [advertList, setAdvertList] = useState([]);
 
-    useEffect(() => {
-        fetchAllAdverts()
+  const [isLogged, setIsLogged] = useState<string>(
+    localStorage.getItem("access_token") as string
+  );
 
-        return () => {
-            console.log("component will unmount")
-        }
-    }, [])
+  useEffect(() => {
+    fetchAllAdverts();
 
-    const fetchAllAdverts = async() => {
-       try {
-            const { data, totalCount } = await AdvertService.findAll()
-            setAdvertList(data)
-            setTotalCount(totalCount)
-       } catch (error) {
-            console.log(error)
-       }
+    return () => {
+      console.log("component will unmount");
+    };
+  }, []);
+
+  const fetchAllAdverts = async () => {
+    try {
+      const { data, totalCount } = await AdvertService.findAll();
+      setAdvertList(data);
+      setTotalCount(totalCount);
+    } catch (error) {
+      console.log(error);
     }
-    
-   return (
+  };
+
+  return (
     <div>
-        <h1>Advert List</h1>
+      {!isLogged && (
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+          <Link to="/auth/signup">Sign up</Link>
+          <Link to="/auth/signin">Sign in</Link>
+        </div>
+      )}
+      {isLogged && (
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+          <button
+            onClick={() => {
+              localStorage.removeItem("access_token");
+              setIsLogged("");
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
 
-        <Link to="/adverts/create">Ajouter</Link>
+      <h1>Advert List</h1>
 
-        <Link to="/auth/signup">Signup</Link>
-        <Link to="/auth/signin">signin</Link>
-        
-        <AdvertList advertList={advertList}  fetchAllAdverts={fetchAllAdverts} />
-
-        <AdvertPaginate totalCount={totalCount} />
+      <AdvertList advertList={advertList} fetchAllAdverts={fetchAllAdverts} />
+      <Link to="/adverts/create">
+        <button>Add an advert</button>
+      </Link>
+      <AdvertPaginate totalCount={totalCount} />
     </div>
-   )
+  );
 }
 
-export default Advert
+export default Advert;

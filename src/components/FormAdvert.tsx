@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import AdvertService from "../services/advert.service";
+import CategoryService from "../services/category.service";
 import { AdvertType } from "../types/advert";
 import { useNavigate, useParams } from "react-router-dom";
+import { CategoryType } from "../types/category";
 
 const FormAdvert = () => {
   const [credentials, setCredentials] = useState<AdvertType>({
@@ -10,13 +12,20 @@ const FormAdvert = () => {
     nb_rooms: 0,
     price: 0,
     surface: 0,
+    category: { id: undefined, name: "" },
   });
-  const navigate = useNavigate();
   const { id } = useParams();
+
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("FormAdvert component did mount : ", id);
-    handleFetchOneAdvert();
+    if (id) {
+      handleFetchOneAdvert();
+    }
+    handleFetchCategories();
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,43 +33,75 @@ const FormAdvert = () => {
     setCredentials({ ...credentials, [name]: value });
   };
 
-  const handleFetchOneAdvert = async () => {
-    if(!id) return
+  const handleChangeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    const category: CategoryType | undefined = categories.find(
+      (category: CategoryType) => category.id === parseInt(value)
+    );
+    setCredentials({
+      ...credentials,
+      category: {
+        id: value,
+        name: category?.name as string,
+      },
+    });
+  };
 
+  const handleFetchCategories = async () => {
+    try {
+      const data = await CategoryService.findAll();
+      setCategories(data);
+    } catch (error) {
+      console.log("handleFetchCategories error : ", error);
+    }
+  };
+
+  const handleFetchOneAdvert = async () => {
+    if (!id) return;
     try {
       const data = await AdvertService.findOne(id);
       console.log("handleFetchOneAdvert data : ", data);
-      setCredentials({...data});
+      setCredentials({
+        title: data.title,
+        description: data.description,
+        nb_rooms: data.nb_rooms,
+        price: data.price,
+        surface: data.surface,
+        category: { id: data.category.id, name: data.category.name },
+      });
     } catch (error) {
-      console.log("handleFetchOneAdvert error : ", error); 
+      console.log("handleFetchOneAdvert error : ", error);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let redirectPath = ""
+    let redirectPath = "";
 
     try {
-      if(!id){
+      if (!id) {
         const data = await AdvertService.create(credentials);
-        redirectPath = `/adverts/${data.id}`
+        redirectPath = `/adverts/${data.id}`;
       } else {
         await AdvertService.update(credentials, id);
-        redirectPath = `/adverts/${id}`
+        redirectPath = `/adverts/${id}`;
       }
-        
+
       navigate(redirectPath);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <div>
       <h2>Form Advert</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+      >
         <div>
           <input
             onChange={handleChange}
@@ -106,7 +147,15 @@ const FormAdvert = () => {
             value={credentials.surface}
           />
         </div>
-        <input type="submit" value={id? "Update" : "Create"} />
+        <select onChange={handleChangeSelect}>
+          <option value="">Choose a category</option>
+          {categories.map((category: CategoryType) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+        <input type="submit" value={id ? "Update" : "Create"} />
       </form>
     </div>
   );

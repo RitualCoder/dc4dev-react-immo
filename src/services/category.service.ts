@@ -1,20 +1,8 @@
-import { AdvertType, CreateAdvertDto } from "../types/advert";
+import { CategoryType, CreateCategoryDto } from "../types/category";
 
-const ENDPOINT = `${import.meta.env.VITE_APP_API_URL}/adverts`;
+const ENDPOINT = `${import.meta.env.VITE_APP_API_URL}/categories`;
 
-const findAll = async () => {
-  const request = await fetch(ENDPOINT);
-
-  return await request.json();
-};
-
-const findOne = async (id: string) => {
-  const request = await fetch(`${ENDPOINT}/${id}`);
-
-  return await request.json();
-};
-
-const create = async (credentials: CreateAdvertDto) => {
+const create = async (credentials: CreateCategoryDto) => {
   /* utm */
   // Get access token to local storage
   const access_token = localStorage.getItem("access_token") as string;
@@ -31,19 +19,30 @@ const create = async (credentials: CreateAdvertDto) => {
   return await request.json();
 };
 
+const findAll = async () => {
+  const request = await fetch(ENDPOINT);
+
+  return await request.json();
+};
+
+const findOne = async (id: string) => {
+  const request = await fetch(`${ENDPOINT}/${id}`);
+
+  return await request.json();
+};
+
 const remove = async (id: number) => {
   const access_token = localStorage.getItem("access_token") as string;
   const request = await fetch(`${ENDPOINT}/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${JSON.parse(access_token)}`,
-      "Content-Type": "application/json",
     },
   });
   return await request.json();
 };
 
-const update = async (credentials: AdvertType, id: string) => {
+const update = async (credentials: CategoryType, id: string) => {
   const access_token = localStorage.getItem("access_token") as string;
 
   const request = await fetch(`${ENDPOINT}/${id}`, {
@@ -58,12 +57,12 @@ const update = async (credentials: AdvertType, id: string) => {
   return await request.json();
 };
 
-const AdvertService = {
-  findAll,
-  findOne,
+const CategoryService = {
   create,
+  findAll,
   remove,
+  findOne,
   update,
 };
 
-export default AdvertService;
+export default CategoryService;

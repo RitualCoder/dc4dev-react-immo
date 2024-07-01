@@ -26,4 +26,3 @@ export const useUser = () => {
 
   return { user, addUser, removeUser, setUser };
 };
-
